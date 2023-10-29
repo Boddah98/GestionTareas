@@ -1,0 +1,8 @@
+Enzo Morales,Desarrollador de software,4,90
+requerimientos,disenio
+Andy Cruz,Desarrollador de software,5,90
+desarrollo,qa
+Allison Perez,Disenadora,10,70
+fullstack,frontend
+Edward Elric,Alquimista,20,100
+backend
