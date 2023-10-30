@@ -6,3 +6,5 @@ Allison Perez,Disenadora,10,70
 fullstack,frontend
 Edward Elric,Alquimista,20,100
 backend
+Alejandro Basquez,SCRUM Master,50,82
+administracion,requerimientos

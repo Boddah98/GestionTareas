@@ -25,13 +25,62 @@ ejecutar_menu_principal(Opcion) :- Opcion == 1, gestion_personas, menu_principal
 gestion_personas :- write('\n-> Menu gestion de personas\n'),
         write('   1. Agregar persona\n'),
         write('   2. Mostrar tareas asignadas a cada persona\n'),
+        write('   3. Volver\n'),
         write('Por favor seleccione una opcion: '), read(Opcion),
         ejecutar_gestion_personas(Opcion).
 
-ejecutar_gestion_personas(Opcion) :- Opcion == 1, gestion_personas, menu_principal;
-        Opcion == 2, gestion_proyectos, menu_principal;
-        Opcion == 9, true;
+ejecutar_gestion_personas(Opcion) :- Opcion == 1, menu_guardar_persona, menu_principal;
+        Opcion == 2, mostrar_personas, menu_principal;
+        Opcion == 3, true;
         write('\nError: Por favor ingrese una opcion valida.\n'), gestion_personas.
+
+menu_guardar_persona :-
+    write('\n-> Agregar Persona\n'),
+    write('Ingrese el nombre: '), read(Nombre),
+    write('Ingrese el puesto: '), read(Puesto),
+    write('Ingrese el costo por tarea: '), read(CostoTarea),
+    write('Ingrese el rating: '), read(Rating),
+    recibir_tareas([], Tareas),  % Inicialmente, la lista de tareas está vacía
+    % Llama a guardar_persona/5 con los datos recopilados
+    guardar_persona(Nombre, Puesto, CostoTarea, Rating, Tareas),
+    write('\nPersona guardada con exito.\n').
+
+recibir_tareas(TareasActuales, TareasFinales) :-
+    write('\nSeleccione las tareas que puede realizar esta persona:\n'),
+    write('1. Requerimientos\n'),
+    write('2. Diseno\n'),
+    write('3. Desarrollo\n'),
+    write('4. QA\n'),
+    write('5. Fullstack\n'),
+    write('6. Frontend\n'),
+    write('7. Backend\n'),
+    write('8. Administracion\n'),
+    write('9. Finalizar lista de tareas\n'),
+    write('Por favor ingrese una opcion: '), read(Opcion),
+    (
+        Opcion >= 1, Opcion =< 8 ->  % Verifica si la opción es válida
+        obtener_tarea(Opcion, Tarea),
+        agregar_tarea(TareasActuales, Tarea, NuevasTareas),
+        recibir_tareas(NuevasTareas, TareasFinales)
+    ;
+        Opcion == 9 ->  % El usuario selecciona "Salir"
+        TareasFinales = TareasActuales  % Termina y la lista de tareas es la actual
+    ;
+        write('Opción no valida. Por favor seleccione una opción valida.\n'),
+        recibir_tareas(TareasActuales, TareasFinales)
+    ).
+
+obtener_tarea(1, 'requerimientos').
+obtener_tarea(2, 'diseño').
+obtener_tarea(3, 'desarrollo').
+obtener_tarea(4, 'qa').
+obtener_tarea(5, 'fullstack').
+obtener_tarea(6, 'frontend').
+obtener_tarea(7, 'backend').
+obtener_tarea(8, 'administracion').
+
+agregar_tarea(TareasActuales, Tarea, NuevasTareas) :-
+    append(TareasActuales, [Tarea], NuevasTareas).
 
 guardar_persona(Nombre, Puesto, CostoTarea, Rating, Tareas) :-
     open('personas.txt', append, File),
@@ -84,7 +133,6 @@ mostrar_personas :-
     nl,
     fail.
 
-gestion_personas :- write('Has seleccionado la opción 1 (Gestión de personas).\n').
 gestion_proyectos :- write('Has seleccionado la opción 2 (Gestión de proyectos).\n').
 gestion_tareas :- write('Has seleccionado la opción 3 (Gestión de tareas).\n').
 buscar_tareas :- write('Has seleccionado la opción 4 (Buscar tareas libres).\n').
