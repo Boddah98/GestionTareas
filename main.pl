@@ -1,3 +1,6 @@
+%Entradas: No posee.
+%Salidas: Un booleano.
+%Descripción:Función encargada de crear el menú principal y mantenerlo en ciclo.
 menu_principal :- write('\n-> Menu principal\n'),
         write('   1. Gestion de personas\n'),
         write('   2. Gestion de proyectos\n'),
@@ -11,6 +14,9 @@ menu_principal :- write('\n-> Menu principal\n'),
         write('Por favor seleccione una opcion: '), read(Opcion),
         ejecutar_menu_principal(Opcion).
 
+%Entradas: Recibe la opción que selecciono el usuario.
+%Salidas: Un booleano.
+%Descripción: Función que se encarga de ejecutar la opción seleccionada por el usuario.
 ejecutar_menu_principal(Opcion) :- Opcion == 1, gestion_personas, menu_principal;
         Opcion == 2, gestion_proyectos, menu_principal;
         Opcion == 3, gestion_tareas, menu_principal;
@@ -22,6 +28,11 @@ ejecutar_menu_principal(Opcion) :- Opcion == 1, gestion_personas, menu_principal
         Opcion == 9, true;
         write('\nError: Por favor ingrese una opcion valida.\n'), menu_principal.
 
+%########################################################################################Apartado de gestión de PERSONAS
+
+%Entradas: No posee.
+%Salidas: Un booleano.
+%Descripción: Menú que habilita las opciones disponibles para la gestión de personas ¿
 gestion_personas :- write('\n-> Menu gestion de personas\n'),
         write('   1. Agregar persona\n'),
         write('   2. Mostrar tareas asignadas a cada persona\n'),
@@ -29,13 +40,13 @@ gestion_personas :- write('\n-> Menu gestion de personas\n'),
         write('Por favor seleccione una opcion: '), read(Opcion),
         ejecutar_gestion_personas(Opcion).
 
-ejecutar_gestion_personas(Opcion) :- Opcion == 1, menu_guardar_persona, menu_principal;
-        Opcion == 2, mostrar_personas, menu_principal;
+ejecutar_gestion_personas(Opcion) :- Opcion == 1, menu_guardar_persona;
+        Opcion == 2, mostrar_personas;
         Opcion == 3, true;
         write('\nError: Por favor ingrese una opcion valida.\n'), gestion_personas.
 
 menu_guardar_persona :-
-    write('\n-> Agregar Persona\n'),
+    write('\n-> Agregar Persona nueva\n'),
     write('Ingrese el nombre: '), read(Nombre),
     write('Ingrese el puesto: '), read(Puesto),
     write('Ingrese el costo por tarea: '), read(CostoTarea),
@@ -66,7 +77,7 @@ recibir_tareas(TareasActuales, TareasFinales) :-
         Opcion == 9 ->  % El usuario selecciona "Salir"
         TareasFinales = TareasActuales  % Termina y la lista de tareas es la actual
     ;
-        write('Opción no valida. Por favor seleccione una opción valida.\n'),
+        write('Opcion no valida. Por favor seleccione una opcion valida.\n'),
         recibir_tareas(TareasActuales, TareasFinales)
     ).
 
@@ -83,7 +94,7 @@ agregar_tarea(TareasActuales, Tarea, NuevasTareas) :-
     append(TareasActuales, [Tarea], NuevasTareas).
 
 guardar_persona(Nombre, Puesto, CostoTarea, Rating, Tareas) :-
-    open('personas.txt', append, File),
+    open('Personas.txt', append, File),
     write(File, Nombre), write(File, ','),
     write(File, Puesto), write(File, ','),
     write(File, CostoTarea), write(File, ','),
@@ -96,11 +107,11 @@ guardar_tareas(File, Tareas) :-
     write(File, TareasString), nl(File).  % Escribe la cadena de tareas en la siguiente línea
 
 cargar_personas :-
-    (   exists_file('personas.txt')
-    ->  open('personas.txt', read, File),
+    (   exists_file('Personas.txt')
+    ->  open('Personas.txt', read, File),
         cargar_personas_desde_archivo(File),
         close(File)
-    ;   write('El archivo personas.txt no existe.'), nl
+    ;   write('El archivo Personas.txt no existe.'), nl
     ).
 
 cargar_personas_desde_archivo(File) :-
@@ -133,7 +144,60 @@ mostrar_personas :-
     nl,
     fail.
 
-gestion_proyectos :- write('Has seleccionado la opción 2 (Gestión de proyectos).\n').
+%#################################################################################Apartado de gestión de PROYECTOS
+
+gestion_proyectos :- write('\n-> Menu gestion de proyectos\n'),
+        write('   1. Agregar proyecto nuevo\n'),
+        write('   2. Mostrar informacion de los proyectos\n'),
+        write('   3. Volver\n'),
+        write('Por favor seleccione una opcion: '), read(Opcion),
+        ejecutar_gestion_proyectos(Opcion).
+
+ejecutar_gestion_proyectos(Opcion) :- Opcion == 1, menu_guardar_proyecto;
+        Opcion == 2, mostrar_personas;
+        Opcion == 3, true;
+        write('\nError: Por favor ingrese una opcion valida.\n'), gestion_proyectos.
+
+menu_guardar_proyecto :-
+    write('\n-> Agregar Proyecto nuevo\n'),
+    write('Ingrese el nombre del proyecto: '), read(Nombre),
+    write('Ingrese el nombre de la empresa: '), read(Empresa),
+    write('Ingrese el presupuesto del proyecto: '), read(Presupuesto),
+    obtener_fecha('Fecha de inicio (YYYY-MM-DD): ', FechaInicio),
+    obtener_fecha('Fecha de fin (YYYY-MM-DD): ', FechaFin),
+    guardar_proyecto(Nombre, Empresa, Presupuesto, FechaInicio, FechaFin),
+    write('\nProyecto guardado con exito.\n').
+
+obtener_fecha(Mensaje, Fecha) :-
+    repeat,
+    write(Mensaje), read(Entrada),
+    (validar_formato_fecha(Entrada) -> parsear_fecha(Entrada, Fecha) ; write('Formato de fecha incorrecto. Intente de nuevo.\n'), fail).
+
+validar_formato_fecha(Entrada) :-
+    split_string(Entrada, "-", "", [Anio, Mes, Dia]),
+    atom_length(Anio, 4),
+    atom_length(Mes, 2),
+    atom_length(Dia, 2),
+    atom_number(Anio, _),
+    atom_number(Mes, _),
+    atom_number(Dia, _).
+
+parsear_fecha(Entrada, Fecha) :-
+    split_string(Entrada, "-", "", [Anio, Mes, Dia]),
+    atom_number(Anio, AnioNumero),
+    atom_number(Mes, MesNumero),
+    atom_number(Dia, DiaNumero),
+    Fecha = date(AnioNumero, MesNumero, DiaNumero).
+
+guardar_proyecto(Nombre, Empresa, Presupuesto, FechaInicio, FechaFin) :-
+    open('Proyectos.txt', append, File),
+    write(File, Nombre), write(File, ','),
+    write(File, Empresa), write(File, ','),
+    write(File, Presupuesto), write(File, ','),
+    write(File, FechaInicio), write(File, ','),
+    write(File, FechaFin), nl(File),  % Agrega un salto de línea después de los datos del proyecto
+    close(File).
+
 gestion_tareas :- write('Has seleccionado la opción 3 (Gestión de tareas).\n').
 buscar_tareas :- write('Has seleccionado la opción 4 (Buscar tareas libres).\n').
 recomendar_persona :- write('Has seleccionado la opción 5 (Recomendar persona).\n').

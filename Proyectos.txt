@@ -1,0 +1,2 @@
+Punto de venta,Mini super Limón,100000,date(2020,3,12),date(2022,5,20)
+Registro de socios,Santa Ana Country Club,8000000,date(2020,20,10),date(2022,10,15)
