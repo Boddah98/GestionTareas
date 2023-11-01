@@ -46,7 +46,7 @@ ejecutar_menu_principal(Opcion) :- Opcion == 1, gestion_personas, menu_principal
 
 %Entradas: No posee.
 %Salidas: Un booleano.
-%Descripción: Menú que habilita las opciones disponibles para la gestión de personas ¿
+%Descripción: Menú que habilita las opciones disponibles para la gestión de personas
 gestion_personas :- write('\n-> Menu gestion de personas\n'),
         write('   1. Agregar persona\n'),
         write('   2. Mostrar tareas asignadas a cada persona\n'),
@@ -59,6 +59,9 @@ ejecutar_gestion_personas(Opcion) :- Opcion == 1, menu_guardar_persona;
         Opcion == 3, true;
         write('\nError: Por favor ingrese una opcion valida.\n'), gestion_personas.
 
+%Entradas: No posee.
+%Salidas: Un booleano.
+%Descripción: Función que despliega el menú para agregar personas nuevas.
 menu_guardar_persona :-
     write('\n-> Agregar Persona nueva\n'),
     write('Ingrese el nombre: '), read(Nombre),
@@ -70,6 +73,9 @@ menu_guardar_persona :-
     guardar_persona(Nombre, Puesto, CostoTarea, Rating, Tareas),
     write('\nPersona guardada con exito.\n').
 
+%Entradas: Lista de tareas actuales y lista de tareas final(una vez que se termino todo el ciclo correctamente).
+%Salidas: Un booleano.
+%Descripción:funcion que se encargra de crear un menu en ciclo, en donde se introducen las tareas que puede realizar esta persona.
 recibir_tareas(TareasActuales, TareasFinales) :-
     write('\nSeleccione las tareas que puede realizar esta persona:\n'),
     write('   1. Requerimientos\n'),
@@ -104,9 +110,15 @@ obtener_tarea(6, 'frontend').
 obtener_tarea(7, 'backend').
 obtener_tarea(8, 'administracion').
 
+%Entradas: Lista de tareas actuales, la tarea que se desea agregar y la lista de tareas post-append.
+%Salidas: Un booleano.
+%Descripción:Función basica para hacer append a las lista de tareas
 agregar_tarea(TareasActuales, Tarea, NuevasTareas) :-
     append(TareasActuales, [Tarea], NuevasTareas).
 
+%Entradas: Los atributos de la persona a guardar.
+%Salidas: Un booleano.
+%Descripción: Función que escribe en el archivo de texto los atributos de la persona.
 guardar_persona(Nombre, Puesto, CostoTarea, Rating, Tareas) :-
     open('Personas.txt', append, File),
     write(File, Nombre), write(File, ','),
@@ -115,11 +127,18 @@ guardar_persona(Nombre, Puesto, CostoTarea, Rating, Tareas) :-
     write(File, Rating), nl(File),  % Agrega un salto de línea después de los datos de la persona
     guardar_tareas(File, Tareas),
     close(File).
+    assert(persona(Nombre, Puesto, CostoTarea, Rating, Tareas)).
 
+%Entradas: El archivo en donde se guardará la tarea y la tarea a guardar.
+%Salidas: Un booleano.
+%Descripción: Funcion que se encarga de guardar las tareas de una persona.
 guardar_tareas(File, Tareas) :-
     atomic_list_concat(Tareas, ',', TareasString),  % Convierte la lista en una cadena
     write(File, TareasString), nl(File).  % Escribe la cadena de tareas en la siguiente línea
 
+%Entradas: No posee.
+%Salidas: Un booleano.
+%Descripción: Función que lee el archivo txt de personas y los introduce en la base de conocimiento.
 cargar_personas :-
     (   exists_file('Personas.txt')
     ->  open('Personas.txt', read, File),
@@ -128,6 +147,9 @@ cargar_personas :-
     ;   write('El archivo Personas.txt no existe.'), nl
     ).
 
+%Entradas: El archivo txt de personas.
+%Salidas: Un booleano.
+%Descripción: Función auxiliar de cargar personas que lee las lineas.
 cargar_personas_desde_archivo(File) :-
     (   read_line_to_string(File, Line),
         Line \== end_of_file
@@ -136,11 +158,17 @@ cargar_personas_desde_archivo(File) :-
     ;   true
     ).
 
+%Entradas: La linea leida y el  txt.
+%Salidas: Un booleano.
+%Descripción: Función que procesa las lineas leidas.
 procesar_persona(Line, File) :-
     atomic_list_concat([Nombre, Puesto, CostoTarea, Rating], ',', Line),
     leer_tareas(File, Tareas),
     assert(persona(Nombre, Puesto, CostoTarea, Rating, Tareas)).
 
+%Entradas: El txt y las Tareas que este contiene.
+%Salidas: Un booleano.
+%Descripción: Función que lee el archivo txt de personas y los introduce en la base de conocimiento.
 leer_tareas(File, Tareas) :-
     read_line_to_string(File, Line),
     (   Line \== end_of_file, Line \== ''
@@ -148,6 +176,9 @@ leer_tareas(File, Tareas) :-
     ;   Tareas = []
     ).
 
+%Entradas: No posee.
+%Salidas: Un booleano.
+%Descripción: Función que imprime a todas las personas en la base de conocimiento.
 mostrar_personas :-
     persona(Nombre, Puesto, CostoTarea, Rating, Tareas),
     write('Nombre: '), write(Nombre), nl,
@@ -158,6 +189,9 @@ mostrar_personas :-
     nl,
     fail.
 
+%Entradas: No posee.
+%Salidas: Un booleano.
+%Descripción: Función que muestra las tareas asignadas especificamente a.
 mostrar_tareas_asignadas_a_personas :-
     findall(Persona, persona(Persona, _, _, _, _), Personas),
     mostrar_tareas_asignadas(Personas).
@@ -225,6 +259,7 @@ guardar_proyecto(Nombre, Empresa, Presupuesto, FechaInicio, FechaFin) :-
     open('Proyectos.txt', append, File),
     format(File, '~w,~w,~w,~w-~w-~w,~w-~w-~w~n', [Nombre, Empresa, Presupuesto, Y1, M1, D1, Y2, M2, D2]),
     close(File).
+    assert(proyecto(Nombre, Empresa, Presupuesto, FechaInicio, FechaFin)).
 
 cargar_proyectos :-
     (exists_file('Proyectos.txt')
@@ -338,6 +373,7 @@ guardar_tarea(Tarea) :-
     write(File, Persona), write(File, ','),
     write(File, FechaCierre), nl(File),  % Agrega un salto de línea después de los datos de la tarea
     close(File).
+    assert(tarea(Proyecto, Nombre, Tipo, Estado, Persona, Fecha)).
 
 cargar_tareas :-
     (   exists_file('tareas.txt')
