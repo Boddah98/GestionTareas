@@ -1,10 +1,10 @@
 Punto de venta,Diseno de la interfaz grafica,disenio,pendiente,George Torres,no asignada
-Punto de venta,Creacion de la base de datos,backend,pendiente,Carlos Jimenez,no asignada
+Punto de venta,Creacion de la base de datos,backend,tomada,Carlos Jimenez,no asignada
 Punto de venta,Crear registro de productos,desarrollo,pendiente,Carlos Jimenez,no asignada
-Registro de socios,Diseno del login,desarrollo,pendiente,George Torres,no asignada
-Registro de socios,Creacion del sign in,desarrollo,pendiente,Allison Perez,no asignada
+Registro de socios,Diseno del login,desarrollo,tomada,George Torres,no asignada
+Registro de socios,Creacion del sign in,desarrollo,tomada,Allison Perez,no asignada
 Tienda online,Diseno de la interfaz grafica,frontend,pendiente,Allison Perez,no asignada
 Tienda online,Optimizacion de las busquedas,desarrollo,pendiente,Allison Perez,no asignada
 Tienda online,Creacion de la barra de navegacion,desarrollo,pendiente,Edward Elric,no asignada
 Tienda online,Implementacion de los filtros,desarrollo,pendiente,Edward Elric,no asignada
-Tienda online,Realizar prubas a los filtros,qa,pendiente,George Torres,no asignada
+Tienda online,Realizar prubas a los filtros,qa,tomada,George Torres,no asignada

@@ -23,7 +23,6 @@ menu_principal :- write('\n-> Menu principal\n'),
         write('Por favor seleccione una opcion: '), read(Opcion),
         ejecutar_menu_principal(Opcion).
 
-buscar_tareas :- write('Has seleccionado la opción 4 (Buscar tareas libres).\n').
 recomendar_persona :- write('Has seleccionado la opción 5 (Recomendar persona).\n').
 asignar_tarea :- write('Has seleccionado la opción 6 (Asignar tarea).\n').
 cerrar_tarea :- write('Has seleccionado la opción 7 (Cerrar tarea).\n').
@@ -35,7 +34,7 @@ estadisticas :- write('Has seleccionado la opción 8 (Estadísticas).\n').
 ejecutar_menu_principal(Opcion) :- Opcion == 1, gestion_personas, menu_principal;
         Opcion == 2, gestion_proyectos, menu_principal;
         Opcion == 3, gestion_tareas, menu_principal;
-        Opcion == 4, buscar_tareas, menu_principal;
+        Opcion == 4, buscar_tareas_libres, menu_principal;
         Opcion == 5, recomendar_persona, menu_principal;
         Opcion == 6, asignar_tarea, menu_principal;
         Opcion == 7, cerrar_tarea, menu_principal;
@@ -185,7 +184,7 @@ gestion_proyectos :- write('\n-> Menu gestion de proyectos\n'),
         ejecutar_gestion_proyectos(Opcion).
 
 ejecutar_gestion_proyectos(Opcion) :- Opcion == 1, menu_guardar_proyecto;
-        Opcion == 2, mostrar_proyectos_con_costo;
+        Opcion == 2, mostrar_proyectos;
         Opcion == 3, true;
         write('\nError: Por favor ingrese una opcion valida.\n'), gestion_proyectos.
 
@@ -263,32 +262,6 @@ mostrar_lista_proyectos([proyecto(Nombre, Empresa, Presupuesto, FechaInicio, Fec
     nl,
     mostrar_lista_proyectos(Resto).
 
-mostrar_proyectos_con_costo :-
-    findall(Proyecto, tarea(Proyecto, _, _, _, _, _), Proyectos),
-    mostrar_proyectos_con_costo(Proyectos).
-
-mostrar_proyectos_con_costo([]).
-mostrar_proyectos_con_costo([Proyecto|RestoProyectos]) :-
-    calcular_costo_proyecto(Proyecto, Costo),
-    write('Proyecto: '), write(Proyecto), nl,
-    write('Costo Incurrido: '), write(Costo), nl,
-    mostrar_proyectos_con_costo(RestoProyectos).
-
-calcular_costo_proyecto(Proyecto, Costo) :-
-    findall(Tarea, tarea(Proyecto, _, _, _, _, _), Tareas), % Obtener todas las tareas del proyecto
-    calcular_costo_tareas(Tareas, Costo).
-
-calcular_costo_tareas([], 0). % Cuando no hay más tareas, el costo total es 0.
-calcular_costo_tareas([Tarea|TareasRestantes], CostoTotal) :-
-    calcular_costo_tarea(Tarea, CostoTarea),
-    calcular_costo_tareas(TareasRestantes, CostoRestante),
-    CostoTotal is CostoTarea + CostoRestante.
-
-calcular_costo_tarea(Tarea, CostoTarea) :-
-    Tarea = tarea(_, _, _, _, Persona, _),
-    persona(Persona, _, CostoPorTarea, _, _),
-    CostoTarea is CostoPorTarea.
-
 %#################################################################################Apartado de gestión de TAREAS
 
 gestion_tareas :- write('\n-> Menu gestion de tareas\n'),
@@ -299,7 +272,7 @@ gestion_tareas :- write('\n-> Menu gestion de tareas\n'),
         ejecutar_gestion_tareas(Opcion).
 
 ejecutar_gestion_tareas(Opcion) :- Opcion == 1, menu_guardar_tarea;
-        Opcion == 2, mostrar_personas;
+        Opcion == 2, mostrar_tareas;
         Opcion == 3, true;
         write('\nError: Por favor ingrese una opcion valida.\n'), gestion_tareas.
 
@@ -399,3 +372,46 @@ mostrar_tareas :-
     format('Fecha de cierre: ~w\n', [Fecha]),
     nl,
     fail.  % Esto fallará para que imprima todas las tareas
+
+%############################################################################################ Funcionalidad 4
+
+buscar_tareas_libres :- write('\n-> Menu buscar tareas libres\n'),
+        write('   1. Buscar todas las tareas libres\n'),
+        write('   2. Mostrar tareas libres para persona\n'),
+        write('   3. Volver\n'),
+        write('Por favor seleccione una opcion: '), read(Opcion),
+        ejecutar_buscar_tareas_libres(Opcion).
+
+ejecutar_buscar_tareas_libres(Opcion) :- Opcion == 1, mostrar_tareas_pendientes;
+        Opcion == 2, menu_solicitar_persona;
+        Opcion == 3, true;
+        write('\nError: Por favor ingrese una opcion valida.\n'), buscar_tareas_libres.
+
+mostrar_tareas_pendientes :-
+    findall(tarea(Proyecto, Nombre, Tipo, Estado, Persona, Fecha), tarea(Proyecto, Nombre, Tipo, 'pendiente', Persona, Fecha), Tareas),
+    imprimir_todas_las_tareas(Tareas).
+
+imprimir_todas_las_tareas(Tareas) :-
+    foreach(member(tarea(Proyecto, Nombre, Tipo, _, Persona, Fecha), Tareas),
+        format('Proyecto: ~w~nNombre: ~w~nTipo: ~w~nEstado: ~w~nPersona: ~w~nFecha: ~w~n~n', [Proyecto, Nombre, Tipo, 'pendiente', Persona, Fecha])
+    ).
+
+tareas_que_puede_desarrollar(Persona) :-
+    persona(Persona, _, _, _, TiposDeTareas),
+    findall(tarea(Proyecto, Nombre, Tipo, Estado, Persona, Fecha), tarea(Proyecto, Nombre, Tipo, 'pendiente', Persona, Fecha), Tareas),
+    filter_tareas_por_tipos(TiposDeTareas, Tareas, TareasFiltradas),
+    imprimir_todas_las_tareas(TareasFiltradas).
+
+filter_tareas_por_tipos([], Tareas, Tareas).
+filter_tareas_por_tipos([Tipo | RestoTipos], Tareas, TareasFiltradas) :-
+    include(tarea_con_tipo(Tipo), Tareas, TareasConTipo),
+    filter_tareas_por_tipos(RestoTipos, Tareas, TareasRestantes),
+    append(TareasConTipo, TareasRestantes, TareasFiltradas).
+
+tarea_con_tipo(Tipo, tarea(_, _, Tipo, _, _, _)).
+
+menu_solicitar_persona :-
+    write('Ingrese el nombre de la persona: '), read(NombrePersona),
+    write('\nTareas que '), write(NombrePersona), write(' puede desarrollar:\n'),
+    tareas_que_puede_desarrollar(NombrePersona),
+    nl.
