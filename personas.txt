@@ -1,6 +1,6 @@
-Enzo Morales,Desarrollador de software,4,90
+George Torres,Desarrollador de software,4,90
 requerimientos,disenio
-Andy Cruz,Desarrollador de software,5,90
+Carlos Jimenez,Desarrollador de software,5,90
 desarrollo,qa
 Allison Perez,Disenadora,10,70
 fullstack,frontend
@@ -8,5 +8,3 @@ Edward Elric,Alquimista,20,100
 backend
 Alejandro Basquez,SCRUM Master,50,82
 administracion,requerimientos
-Cristopher Zuniga,_2484,1020236,100
-requerimientos,diseño,backend

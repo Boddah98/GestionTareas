@@ -4,6 +4,7 @@
 iniciar :-
     cargar_personas,
     cargar_proyectos,
+    cargar_tareas,
     menu_principal.
 
 %Entradas: No posee.
@@ -55,7 +56,7 @@ gestion_personas :- write('\n-> Menu gestion de personas\n'),
         ejecutar_gestion_personas(Opcion).
 
 ejecutar_gestion_personas(Opcion) :- Opcion == 1, menu_guardar_persona;
-        Opcion == 2, mostrar_personas;
+        Opcion == 2, mostrar_tareas_asignadas_a_personas;
         Opcion == 3, true;
         write('\nError: Por favor ingrese una opcion valida.\n'), gestion_personas.
 
@@ -158,6 +159,22 @@ mostrar_personas :-
     nl,
     fail.
 
+mostrar_tareas_asignadas_a_personas :-
+    findall(Persona, persona(Persona, _, _, _, _), Personas),
+    mostrar_tareas_asignadas(Personas).
+
+mostrar_tareas_asignadas([]).
+mostrar_tareas_asignadas([Persona|RestoPersonas]) :-
+    format('\n-> Tareas asignadas a ~w:~n', [Persona]),
+    tareas_asignadas_a_persona(Persona),
+    mostrar_tareas_asignadas(RestoPersonas).
+
+tareas_asignadas_a_persona(Persona) :-
+    tarea(Proyecto, Nombre, _, Estado, Persona, _),
+    format('Proyecto: ~w, Tarea: ~w, Estado: ~w~n', [Proyecto, Nombre, Estado]),
+    fail.
+tareas_asignadas_a_persona(_).
+
 %#################################################################################Apartado de gestión de PROYECTOS
 
 gestion_proyectos :- write('\n-> Menu gestion de proyectos\n'),
@@ -168,7 +185,7 @@ gestion_proyectos :- write('\n-> Menu gestion de proyectos\n'),
         ejecutar_gestion_proyectos(Opcion).
 
 ejecutar_gestion_proyectos(Opcion) :- Opcion == 1, menu_guardar_proyecto;
-        Opcion == 2, mostrar_personas;
+        Opcion == 2, mostrar_proyectos_con_costo;
         Opcion == 3, true;
         write('\nError: Por favor ingrese una opcion valida.\n'), gestion_proyectos.
 
@@ -246,6 +263,32 @@ mostrar_lista_proyectos([proyecto(Nombre, Empresa, Presupuesto, FechaInicio, Fec
     nl,
     mostrar_lista_proyectos(Resto).
 
+mostrar_proyectos_con_costo :-
+    findall(Proyecto, tarea(Proyecto, _, _, _, _, _), Proyectos),
+    mostrar_proyectos_con_costo(Proyectos).
+
+mostrar_proyectos_con_costo([]).
+mostrar_proyectos_con_costo([Proyecto|RestoProyectos]) :-
+    calcular_costo_proyecto(Proyecto, Costo),
+    write('Proyecto: '), write(Proyecto), nl,
+    write('Costo Incurrido: '), write(Costo), nl,
+    mostrar_proyectos_con_costo(RestoProyectos).
+
+calcular_costo_proyecto(Proyecto, Costo) :-
+    findall(Tarea, tarea(Proyecto, _, _, _, _, _), Tareas), % Obtener todas las tareas del proyecto
+    calcular_costo_tareas(Tareas, Costo).
+
+calcular_costo_tareas([], 0). % Cuando no hay más tareas, el costo total es 0.
+calcular_costo_tareas([Tarea|TareasRestantes], CostoTotal) :-
+    calcular_costo_tarea(Tarea, CostoTarea),
+    calcular_costo_tareas(TareasRestantes, CostoRestante),
+    CostoTotal is CostoTarea + CostoRestante.
+
+calcular_costo_tarea(Tarea, CostoTarea) :-
+    Tarea = tarea(_, _, _, _, Persona, _),
+    persona(Persona, _, CostoPorTarea, _, _),
+    CostoTarea is CostoPorTarea.
+
 %#################################################################################Apartado de gestión de TAREAS
 
 gestion_tareas :- write('\n-> Menu gestion de tareas\n'),
@@ -322,3 +365,37 @@ guardar_tarea(Tarea) :-
     write(File, Persona), write(File, ','),
     write(File, FechaCierre), nl(File),  % Agrega un salto de línea después de los datos de la tarea
     close(File).
+
+cargar_tareas :-
+    (   exists_file('tareas.txt')
+    ->  open('tareas.txt', read, File),
+        cargar_tareas_desde_archivo(File),
+        close(File)
+    ;   write('El archivo tareas.txt no existe.'), nl
+    ).
+
+cargar_tareas_desde_archivo(File) :-
+    read_line_to_string(File, Line),
+    (   Line \== end_of_file
+    ->  procesar_linea_tarea(Line),
+        cargar_tareas_desde_archivo(File)
+    ;   true
+    ).
+
+procesar_linea_tarea(Line) :-
+    split_string(Line, ",", " ,\t\n", [Proyecto, Nombre, Tipo, EstadoAtom, PersonaAtom, Fecha]),
+    atom_string(Estado, EstadoAtom),
+    atom_string(Persona, PersonaAtom),
+    assert(tarea(Proyecto, Nombre, Tipo, Estado, Persona, Fecha)).
+
+mostrar_tareas :-
+    write('Tareas en la base de conocimiento:\n'),
+    tarea(Proyecto, Nombre, Tipo, Estado, Persona, Fecha),
+    format('Proyecto: ~w\n', [Proyecto]),
+    format('Nombre: ~w\n', [Nombre]),
+    format('Tipo: ~w\n', [Tipo]),
+    format('Estado: ~w\n', [Estado]),
+    format('Persona asignada: ~w\n', [Persona]),
+    format('Fecha de cierre: ~w\n', [Fecha]),
+    nl,
+    fail.  % Esto fallará para que imprima todas las tareas
