@@ -8,3 +8,5 @@ Edward Elric,Alquimista,20,100
 backend
 Alejandro Basquez,SCRUM Master,50,82
 administracion,requerimientos
+Cristopher Zuniga,_2484,1020236,100
+requerimientos,diseño,backend

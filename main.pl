@@ -1,5 +1,13 @@
 %Entradas: No posee.
 %Salidas: Un booleano.
+%Descripción: Función que carga el estado de la última base de conocimiento registrada.
+iniciar :-
+    cargar_personas,
+    cargar_proyectos,
+    menu_principal.
+
+%Entradas: No posee.
+%Salidas: Un booleano.
 %Descripción:Función encargada de crear el menú principal y mantenerlo en ciclo.
 menu_principal :- write('\n-> Menu principal\n'),
         write('   1. Gestion de personas\n'),
@@ -13,6 +21,12 @@ menu_principal :- write('\n-> Menu principal\n'),
         write('   9. Salir\n'),
         write('Por favor seleccione una opcion: '), read(Opcion),
         ejecutar_menu_principal(Opcion).
+
+buscar_tareas :- write('Has seleccionado la opción 4 (Buscar tareas libres).\n').
+recomendar_persona :- write('Has seleccionado la opción 5 (Recomendar persona).\n').
+asignar_tarea :- write('Has seleccionado la opción 6 (Asignar tarea).\n').
+cerrar_tarea :- write('Has seleccionado la opción 7 (Cerrar tarea).\n').
+estadisticas :- write('Has seleccionado la opción 8 (Estadísticas).\n').
 
 %Entradas: Recibe la opción que selecciono el usuario.
 %Salidas: Un booleano.
@@ -58,15 +72,15 @@ menu_guardar_persona :-
 
 recibir_tareas(TareasActuales, TareasFinales) :-
     write('\nSeleccione las tareas que puede realizar esta persona:\n'),
-    write('1. Requerimientos\n'),
-    write('2. Diseno\n'),
-    write('3. Desarrollo\n'),
-    write('4. QA\n'),
-    write('5. Fullstack\n'),
-    write('6. Frontend\n'),
-    write('7. Backend\n'),
-    write('8. Administracion\n'),
-    write('9. Finalizar lista de tareas\n'),
+    write('   1. Requerimientos\n'),
+    write('   2. Diseno\n'),
+    write('   3. Desarrollo\n'),
+    write('   4. QA\n'),
+    write('   5. Fullstack\n'),
+    write('   6. Frontend\n'),
+    write('   7. Backend\n'),
+    write('   8. Administracion\n'),
+    write('   9. Finalizar lista de tareas\n'),
     write('Por favor ingrese una opcion: '), read(Opcion),
     (
         Opcion >= 1, Opcion =< 8 ->  % Verifica si la opción es válida
@@ -190,17 +204,121 @@ parsear_fecha(Entrada, Fecha) :-
     Fecha = date(AnioNumero, MesNumero, DiaNumero).
 
 guardar_proyecto(Nombre, Empresa, Presupuesto, FechaInicio, FechaFin) :-
+    date(Y1, M1, D1) = FechaInicio,
+    date(Y2, M2, D2) = FechaFin,
     open('Proyectos.txt', append, File),
-    write(File, Nombre), write(File, ','),
-    write(File, Empresa), write(File, ','),
-    write(File, Presupuesto), write(File, ','),
-    write(File, FechaInicio), write(File, ','),
-    write(File, FechaFin), nl(File),  % Agrega un salto de línea después de los datos del proyecto
+    format(File, '~w,~w,~w,~w-~w-~w,~w-~w-~w~n', [Nombre, Empresa, Presupuesto, Y1, M1, D1, Y2, M2, D2]),
     close(File).
 
-gestion_tareas :- write('Has seleccionado la opción 3 (Gestión de tareas).\n').
-buscar_tareas :- write('Has seleccionado la opción 4 (Buscar tareas libres).\n').
-recomendar_persona :- write('Has seleccionado la opción 5 (Recomendar persona).\n').
-asignar_tarea :- write('Has seleccionado la opción 6 (Asignar tarea).\n').
-cerrar_tarea :- write('Has seleccionado la opción 7 (Cerrar tarea).\n').
-estadisticas :- write('Has seleccionado la opción 8 (Estadísticas).\n').
+cargar_proyectos :-
+    (exists_file('Proyectos.txt')
+    ->  open('Proyectos.txt', read, File),
+        cargar_proyectos_desde_archivo(File),
+        close(File)
+    ;   write('El archivo Proyectos.txt no existe.'), nl
+    ).
+
+cargar_proyectos_desde_archivo(File) :-
+    read_line_to_string(File, Line),
+    (Line \== end_of_file
+    ->  procesar_linea_proyecto(Line),
+        cargar_proyectos_desde_archivo(File)
+    ;   true
+    ).
+
+procesar_linea_proyecto(Line) :-
+    split_string(Line, ",", " ,\t\n", [Nombre, Empresa, Presupuesto, FechaInicioStr, FechaFinStr]),
+    parsear_fecha(FechaInicioStr, FechaInicio),
+    parsear_fecha(FechaFinStr, FechaFin),
+    assert(proyecto(Nombre, Empresa, Presupuesto, FechaInicio, FechaFin)).
+
+mostrar_proyectos :-
+    findall(proyecto(Nombre, Empresa, Presupuesto, FechaInicio, FechaFin), proyecto(Nombre, Empresa, Presupuesto, FechaInicio, FechaFin), Proyectos),
+    mostrar_lista_proyectos(Proyectos).
+
+mostrar_lista_proyectos([]).
+mostrar_lista_proyectos([proyecto(Nombre, Empresa, Presupuesto, FechaInicio, FechaFin) | Resto]) :-
+    write('Nombre: '), write(Nombre), nl,
+    write('Empresa: '), write(Empresa), nl,
+    write('Presupuesto: '), write(Presupuesto), nl,
+    write('Fecha de Inicio: '), write(FechaInicio), nl,
+    write('Fecha de Fin: '), write(FechaFin), nl,
+    nl,
+    mostrar_lista_proyectos(Resto).
+
+%#################################################################################Apartado de gestión de TAREAS
+
+gestion_tareas :- write('\n-> Menu gestion de tareas\n'),
+        write('   1. Agregar tarea\n'),
+        write('   2. Mostrar tareas\n'),
+        write('   3. Volver\n'),
+        write('Por favor seleccione una opcion: '), read(Opcion),
+        ejecutar_gestion_tareas(Opcion).
+
+ejecutar_gestion_tareas(Opcion) :- Opcion == 1, menu_guardar_tarea;
+        Opcion == 2, mostrar_personas;
+        Opcion == 3, true;
+        write('\nError: Por favor ingrese una opcion valida.\n'), gestion_tareas.
+
+menu_guardar_tarea :-
+    % Mostrar proyectos disponibles
+    findall(NombreProyecto, proyecto(NombreProyecto, _, _, _, _), Proyectos),
+    length(Proyectos, NumProyectos),
+    (NumProyectos > 0
+    ->  write('\n-> Agregar Tarea nueva\n'),
+        write('Proyectos disponibles:\n'),
+        listar_proyectos(Proyectos, 1),
+        write('Seleccione un proyecto: '), read(Seleccion),
+        (Seleccion >= 1, Seleccion =< NumProyectos
+        ->  nth1(Seleccion, Proyectos, ProyectoSeleccionado),
+            write('Ingrese el nombre de la tarea: '), read(NombreTarea),
+            recibir_tarea(TareaString),  % Llama a recibir_tarea para obtener el nombre de la tarea
+            atom_string(Tipo, TareaString),  % Convierte el nombre de la tarea a un átomo
+            Estado = 'pendiente',
+            Persona = 'no asignada',
+            FechaCierre = 'no asignada',
+            Tarea = tarea(ProyectoSeleccionado, NombreTarea, Tipo, Estado, Persona, FechaCierre),
+            % Llama a una función para guardar la tarea o realizar la lógica deseada
+            guardar_tarea(Tarea),
+            write('\nTarea guardada con exito.\n')
+        ;   write('Selección de proyecto inválida. Intente de nuevo.\n')
+        )
+    ;   write('No hay proyectos disponibles. Agregue un proyecto antes de crear una tarea.\n')
+    ).
+
+listar_proyectos([], _).
+listar_proyectos([Proyecto | Resto], Numero) :-
+    write(Numero), write('. '), write(Proyecto), nl,
+    NuevoNumero is Numero + 1,
+    listar_proyectos(Resto, NuevoNumero).
+
+recibir_tarea(Tarea) :-
+    write('\nSeleccione el tipo de la tarea:\n'),
+    write('   1. Requerimientos\n'),
+    write('   2. Diseno\n'),
+    write('   3. Desarrollo\n'),
+    write('   4. QA\n'),
+    write('   5. Fullstack\n'),
+    write('   6. Frontend\n'),
+    write('   7. Backend\n'),
+    write('   8. Administracion\n'),
+    write('Por favor ingrese una opcion: '), read(Opcion),
+    (
+        Opcion >= 1, Opcion =< 8 ->  % Verifica si la opción es válida
+        obtener_tarea(Opcion, TareaString), % Obtiene el nombre de la tarea
+        atom_string(Tarea, TareaString) % Convierte el nombre de la tarea a un string
+    ;
+        write('Opcion no válida. Por favor seleccione una opcion válida.\n'),
+        recibir_tarea(Tarea)  % Llama de nuevo para seleccionar una tarea válida
+    ).
+
+guardar_tarea(Tarea) :-
+    open('Tareas.txt', append, File),
+    Tarea = tarea(Proyecto, Nombre, Tipo, Estado, Persona, FechaCierre),
+    write(File, Proyecto), write(File, ','),
+    write(File, Nombre), write(File, ','),
+    write(File, Tipo), write(File, ','),
+    write(File, Estado), write(File, ','),
+    write(File, Persona), write(File, ','),
+    write(File, FechaCierre), nl(File),  % Agrega un salto de línea después de los datos de la tarea
+    close(File).
